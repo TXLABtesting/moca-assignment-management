@@ -41,22 +41,27 @@ function DashboardStats({ stats, byType, onNavigate, canCreate, role }) {
   const [search, setSearch] = useState('');
   const tableRef = useRef(null);
 
-  const showAllExpiring = () => {
-    setStatusFilter('expiring');
+  const scrollToTable = () => {
     const el = tableRef.current;
-    if (el) {
-      requestAnimationFrame(() => {
-        const main = document.querySelector('.main');
-        if (main && main.scrollHeight > main.clientHeight + 4) {
-          const top = el.getBoundingClientRect().top - main.getBoundingClientRect().top + main.scrollTop - 12;
-          main.scrollTo({ top, behavior: 'instant' });
-        } else {
-          const top = el.getBoundingClientRect().top + window.scrollY - 12;
-          window.scrollTo({ top, behavior: 'instant' });
-        }
-      });
-    }
+    if (!el) return;
+    requestAnimationFrame(() => {
+      const main = document.querySelector('.main');
+      if (main && main.scrollHeight > main.clientHeight + 4) {
+        const top = el.getBoundingClientRect().top - main.getBoundingClientRect().top + main.scrollTop - 12;
+        main.scrollTo({ top, behavior: 'smooth' });
+      } else {
+        const top = el.getBoundingClientRect().top + window.scrollY - 12;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }
+    });
   };
+
+  const filterAndScroll = (s) => {
+    setStatusFilter(s);
+    scrollToTable();
+  };
+
+  const showAllExpiring = () => filterAndScroll('expiring');
 
   const expiring = ASSIGNMENTS
     .filter(a => a.status === 'active')
@@ -113,16 +118,16 @@ function DashboardStats({ stats, byType, onNavigate, canCreate, role }) {
         </div>
       </div>
 
-      <div className="stat-grid">
-        <StatCard label={t('stat_active')} value={stats.active} meta={lang === 'ar' ? '+3 هذا الشهر' : '+3 this month'} dir="up" active={statusFilter === 'active'} onClick={() => setStatusFilter('active')} />
-        <StatCard label={t('stat_pending')} value={stats.pendingMine} meta={stats.pendingMine > 0 ? t('awaiting_you') : (lang === 'ar' ? `${stats.pending} في الانتظار إجمالاً` : `${stats.pending} pending overall`)} accent active={statusFilter === 'pending'} onClick={() => setStatusFilter('pending')} />
-        <StatCard label={t('stat_expiring')} value={stats.expiring} meta={lang === 'ar' ? 'تنتهي قريباً' : 'within 45 days'} dir="warn" active={statusFilter === 'expiring'} onClick={() => setStatusFilter('expiring')} />
-        <StatCard label={t('stat_total_ytd')} value={stats.total} meta={lang === 'ar' ? '+12% عن العام الماضي' : '+12% vs last year'} dir="up" onClick={() => setStatusFilter('all')} />
-      </div>
-
       <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 'var(--space-5)', marginBottom: 'var(--space-5)', alignItems: 'stretch' }}>
         <AnalysisCard />
         <ExpiringSoonCard items={expiring} onNavigate={onNavigate} onShowAll={showAllExpiring} />
+      </div>
+
+      <div className="stat-grid">
+        <StatCard label={t('stat_active')} value={stats.active} meta={lang === 'ar' ? '+3 هذا الشهر' : '+3 this month'} dir="up" active={statusFilter === 'active'} onClick={() => filterAndScroll('active')} />
+        <StatCard label={t('stat_pending')} value={stats.pendingMine} meta={stats.pendingMine > 0 ? t('awaiting_you') : (lang === 'ar' ? `${stats.pending} في الانتظار إجمالاً` : `${stats.pending} pending overall`)} accent active={statusFilter === 'pending'} onClick={() => filterAndScroll('pending')} />
+        <StatCard label={t('stat_expiring')} value={stats.expiring} meta={lang === 'ar' ? 'تنتهي قريباً' : 'within 45 days'} dir="warn" active={statusFilter === 'expiring'} onClick={() => filterAndScroll('expiring')} />
+        <StatCard label={t('stat_total_ytd')} value={stats.total} meta={lang === 'ar' ? '+12% عن العام الماضي' : '+12% vs last year'} dir="up" onClick={() => filterAndScroll('all')} />
       </div>
 
       <div className="page-header-row" ref={tableRef} style={{ marginBottom: 'var(--space-4)', scrollMarginTop: 12 }}>
