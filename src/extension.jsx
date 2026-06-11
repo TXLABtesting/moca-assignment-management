@@ -70,11 +70,11 @@ export default function Extension({ id, onNavigate }) {
     decreeAttached: false,
   });
 
-  const isCapped = assignment.type === 'acting' || assignment.type === 'secondment';
+  const isCapped = assignment.type === 'acting' || assignment.type === 'acting_admin' || assignment.type === 'secondment';
   const requiresMinister = assignment.type === 'loan' || assignment.type === 'borrowing';
-  const proposedEnd = isCapped ? addMonths(assignment.endDate, form.months) : form.newEnd;
+  const proposedEnd = form.newEnd;
   const additionalDays = daysBetween(assignment.endDate, proposedEnd);
-  const exceeds180 = isCapped && Number(form.months) > 6;
+  const exceeds180 = isCapped && additionalDays > 180;
   const dateOrderError = additionalDays <= 0;
   const canSubmit = !exceeds180 && !dateOrderError && form.reason.trim().length > 10 && form.consentAttached && (!requiresMinister || form.decreeAttached);
 
@@ -137,25 +137,16 @@ export default function Extension({ id, onNavigate }) {
               <Field label={t('ext_current_end')}>
                 <Input value={formatDate(assignment.endDate, lang)} readOnly style={{ background: 'var(--bg-muted)' }} />
               </Field>
-              {isCapped ? (
-                <Field label={lang === 'ar' ? 'مدة التمديد' : 'Extension period'} required
-                  hint={lang === 'ar' ? 'بحد أقصى 6 أشهر (180 يوماً)' : 'Up to 6 months (180 days)'}>
-                  <Select value={form.months} onChange={e => setForm({ ...form, months: Number(e.target.value) })}>
-                    {[1, 2, 3, 4, 5, 6].map(m => (
-                      <option key={m} value={m}>{m} {lang === 'ar' ? (m === 1 ? 'شهر' : m === 2 ? 'شهران' : 'أشهر') : (m === 1 ? 'month' : 'months')}</option>
-                    ))}
-                  </Select>
-                </Field>
-              ) : (
-                <Field label={t('ext_new_end')} required
-                  error={dateOrderError ? t('err_end_before_start') : null}
-                  hint={!dateOrderError ? (lang === 'ar' ? 'أي مدة — يتطلب مرسوم الوزير' : "Any period — requires the Minister's decree") : null}>
-                  <Input type="date" value={form.newEnd} onChange={e => setForm({ ...form, newEnd: e.target.value })} />
-                </Field>
-              )}
-              <Field label={lang === 'ar' ? 'تاريخ النهاية الجديد' : 'New end date'}>
-                <Input value={formatDate(proposedEnd, lang)} readOnly style={{ background: 'var(--bg-muted)', fontWeight: 600 }} />
-                <div className="text-xs text-muted" style={{ marginTop: 4 }}>{lang === 'ar' ? `+${additionalDays > 0 ? additionalDays : 0} يوم` : `+${additionalDays > 0 ? additionalDays : 0} days`}</div>
+              <Field label={t('ext_new_end')} required
+                error={dateOrderError ? t('err_end_before_start') : exceeds180 ? (lang === 'ar' ? 'يتجاوز حد 180 يوماً' : 'Exceeds the 180-day cap') : null}
+                hint={!dateOrderError && !exceeds180 ? (isCapped
+                  ? (lang === 'ar' ? 'بحد أقصى 6 أشهر (180 يوماً)' : 'Up to 6 months (180 days)')
+                  : (lang === 'ar' ? 'أي مدة — يتطلب مرسوم الوزير' : "Any period — requires the Minister's decree")) : null}>
+                <Input type="date" value={form.newEnd} onChange={e => setForm({ ...form, newEnd: e.target.value })} min={assignment.endDate} />
+              </Field>
+              <Field label={lang === 'ar' ? 'الإضافة' : 'Added duration'}>
+                <Input value={additionalDays > 0 ? `${additionalDays} ${lang === 'ar' ? 'يوم' : 'days'}` : '—'} readOnly style={{ background: 'var(--bg-muted)', fontWeight: 600 }} />
+                <div className="text-xs text-muted" style={{ marginTop: 4 }}>{lang === 'ar' ? `حتى ${formatDate(proposedEnd, lang)}` : `until ${formatDate(proposedEnd, lang)}`}</div>
               </Field>
             </div>
 
@@ -256,6 +247,9 @@ export default function Extension({ id, onNavigate }) {
                 body={requiresMinister
                   ? (lang === 'ar' ? 'رئيس الجهة → مرسوم الوزير (ترفقه الموارد البشرية)' : "Entity Head → Minister's decree (HR attaches)")
                   : (lang === 'ar' ? 'رئيس الجهة فقط' : 'Entity Head only')} />
+              <PolicyCheck info
+                title={lang === 'ar' ? 'إشعار الموظف' : 'Employee notification'}
+                body={lang === 'ar' ? 'يتلقى الموظف إشعاراً تلقائياً عبر البريد بمجرد اعتماد رئيس القطاع للتمديد.' : 'The employee receives an automated email notification once the Sector Head approves the extension.'} />
             </div>
           </Card>
 

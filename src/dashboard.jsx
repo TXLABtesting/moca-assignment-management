@@ -26,7 +26,7 @@ export default function Dashboard({ variant, onNavigate, canCreate = true, role 
   const byType = useMemo(() => {
     const map = {};
     ASSIGNMENTS.forEach(a => { map[a.type] = (map[a.type] || 0) + 1; });
-    return ['secondment', 'acting', 'loan', 'borrowing'].map(k => ({ type: k, count: map[k] || 0 }));
+    return ['secondment', 'acting', 'acting_admin', 'loan', 'borrowing'].map(k => ({ type: k, count: map[k] || 0 }));
   }, []);
 
   if (variant === 'focus') return <DashboardFocus stats={stats} onNavigate={onNavigate} byType={byType} canCreate={canCreate} role={role} />;
@@ -158,9 +158,9 @@ function AnalysisCard() {
   }, []);
   const scoped = ASSIGNMENTS.filter(a => year === 'all' || new Date(a.startDate).getFullYear() === Number(year));
   const total = scoped.length;
-  const byType = ['secondment', 'acting', 'loan', 'borrowing'].map(k => ({ type: k, count: scoped.filter(a => a.type === k).length }));
+  const byType = ['secondment', 'acting', 'acting_admin', 'loan', 'borrowing'].map(k => ({ type: k, count: scoped.filter(a => a.type === k).length }));
   const max = Math.max(...byType.map(d => d.count), 1);
-  const typeColor = k => k === 'secondment' ? '#5B2E91' : k === 'acting' ? '#145D49' : k === 'loan' ? '#8C3F0E' : '#1D4670';
+  const typeColor = k => k === 'secondment' ? '#5B2E91' : k === 'acting' ? '#145D49' : k === 'acting_admin' ? '#3A7A66' : k === 'loan' ? '#8C3F0E' : '#1D4670';
   return (
     <Card
       title={lang === 'ar' ? 'المهام حسب النوع' : 'Assignments by type'}
@@ -390,10 +390,11 @@ export function AssignmentsTable({ items, search, setSearch, typeFilter, setType
     <div className="table-wrap">
       <div className="toolbar">
         <InputWithIcon icon="search" placeholder={t('search_placeholder')} value={search} onChange={e => setSearch(e.target.value)} />
-        <Select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} style={{ width: 180, height: 34 }}>
+        <Select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} style={{ width: 200, height: 34 }}>
           <option value="all">{lang === 'ar' ? 'كل الأنواع' : 'All types'}</option>
           <option value="secondment">{t('type_secondment')}</option>
           <option value="acting">{t('type_acting')}</option>
+          <option value="acting_admin">{t('type_acting_admin')}</option>
           <option value="loan">{t('type_loan')}</option>
           <option value="borrowing">{t('type_borrowing')}</option>
         </Select>

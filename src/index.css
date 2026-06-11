@@ -449,10 +449,11 @@ a:hover { text-decoration: underline; }
 .badge-active    { background: var(--color-success-50); color: var(--color-success-700); }
 .badge-expired   { background: var(--color-ink-100); color: var(--color-ink-600); }
 .badge-terminated{ background: var(--color-danger-50); color: var(--color-danger-700); border: 1px solid var(--color-danger-100); }
-.badge-type-secondment { background: #EFE6F7; color: #5B2E91; }
-.badge-type-acting     { background: #E0F0EA; color: #145D49; }
-.badge-type-loan       { background: #FCE9DC; color: #8C3F0E; }
-.badge-type-borrowing  { background: #E6EEF8; color: #1D4670; }
+.badge-type-secondment   { background: #EFE6F7; color: #5B2E91; }
+.badge-type-acting       { background: #E0F0EA; color: #145D49; }
+.badge-type-acting_admin { background: #EAF2EE; color: #3A7A66; }
+.badge-type-loan         { background: #FCE9DC; color: #8C3F0E; }
+.badge-type-borrowing    { background: #E6EEF8; color: #1D4670; }
 
 .table-wrap {
   background: var(--bg-surface); border: 1px solid var(--border-default);

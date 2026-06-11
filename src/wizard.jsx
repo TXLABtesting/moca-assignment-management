@@ -58,14 +58,14 @@ export default function Wizard({ onNavigate, onSubmit }) {
         ...f,
         salaryDuring: String(targetGradeObj.min),
         allowanceAmount: f.type === 'borrowing' ? f.allowanceAmount : String(allowance),
-        payingEntity: f.type === 'acting' ? 'home' : f.payingEntity,
+        payingEntity: (f.type === 'acting' || f.type === 'acting_admin') ? 'home' : f.payingEntity,
       }));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form.targetGrade, form.type, form.startDate, form.endDate]);
 
   useEffect(() => {
-    if (form.type !== 'acting' && employee && form.targetGrade !== employee.grade) {
+    if (form.type !== 'acting' && form.type !== 'acting_admin' && employee && form.targetGrade !== employee.grade) {
       setForm(f => ({ ...f, targetGrade: employee.grade }));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -162,7 +162,7 @@ function validateForm(form, employee) {
   }
   const dur = form.startDate && form.endDate ? daysBetween(form.startDate, form.endDate) : 0;
   errs.duration = dur;
-  if (dur > 365) errs.durationError = true;
+  if (form.type !== 'secondment' && dur > 365) errs.durationError = true;
   if (dur < 0) errs.dateOrderError = true;
   if (form.type === 'borrowing' && Number(form.allowanceAmount) > 10000) errs.borrowingAmountError = true;
   errs.requiresAllowance = dur > 60;
@@ -196,10 +196,11 @@ function StepType({ form, update }) {
   }, [senior, form.type]);
 
   const types = [
-    { id: 'secondment', icon: 'arrow-right-circle', name_en: 'Secondment', name_ar: 'التكليف' },
-    { id: 'acting',     icon: 'briefcase',          name_en: 'Acting',     name_ar: 'الندب' },
-    { id: 'loan',       icon: 'send',               name_en: 'Loan',       name_ar: 'الإعارة' },
-    { id: 'borrowing',  icon: 'download',           name_en: 'Borrowing',  name_ar: 'الاستعارة' },
+    { id: 'secondment',   icon: 'arrow-right-circle', name_en: 'Secondment',          name_ar: 'التكليف' },
+    { id: 'acting',       icon: 'briefcase',          name_en: 'Acting (with allowance)', name_ar: 'الندب (مع البدل)' },
+    { id: 'acting_admin', icon: 'briefcase',          name_en: 'Acting (no allowance)',   name_ar: 'الندب الإداري (بدون بدل)' },
+    { id: 'loan',         icon: 'send',               name_en: 'Loan',                name_ar: 'الإعارة' },
+    { id: 'borrowing',    icon: 'download',           name_en: 'Borrowing',           name_ar: 'الاستعارة' },
   ];
 
   return (
@@ -232,6 +233,7 @@ function StepType({ form, update }) {
         <Alert type="policy" icon="shield">
           <strong>{lang === 'ar' ? 'تذكير سياسي: ' : 'Policy reminder: '}</strong>
           {form.type === 'acting' && t('rule_allowance')}
+          {form.type === 'acting_admin' && (lang === 'ar' ? 'الندب الإداري بلا أي أثر مالي — لا يُصرف بدل ولا تتغير الراتب.' : 'Administrative acting has no financial impact — no allowance, no change to base salary.')}
           {form.type === 'secondment' && (lang === 'ar' ? 'التكليف لا يمنح بدلاً منفصلاً؛ يُصرف راتب مربوط الدرجة فقط.' : 'Secondment grants no separate allowance — only the grade salary applies.')}
           {form.type === 'loan' && (lang === 'ar' ? 'الإعارة بلا بدل، وتتطلب اعتماد الوزير لأي تمديد.' : 'Loan carries no allowance and requires Minister approval for any extension.')}
           {form.type === 'borrowing' && t('rule_borrowing_cap')}
@@ -374,8 +376,8 @@ function StepEmployee({ form, update, employee }) {
 
 function StepDetails({ form, update, employee, validation }) {
   const { t, lang } = useI18n();
-  const isActing = form.type === 'acting';
-  const showGrade = form.type === 'acting';
+  const isActing = form.type === 'acting' || form.type === 'acting_admin';
+  const showGrade = isActing;
   const entityLabel = form.type === 'loan'
     ? (lang === 'ar' ? 'الجهة المستقبلة (المُعارة إليها)' : 'Receiving entity (loaned to)')
     : form.type === 'borrowing'
@@ -418,7 +420,7 @@ function StepDetails({ form, update, employee, validation }) {
                 const cur = GRADE_INDEX(employee?.grade);
                 const idx = GRADE_INDEX(g.id);
                 const exceeds = cur >= 0 && idx >= 0 && idx - cur > 2;
-                const seniorBlocked = form.type === 'acting' && IS_SENIOR_GRADE(g.id);
+                const seniorBlocked = isActing && IS_SENIOR_GRADE(g.id);
                 const blocked = exceeds || seniorBlocked;
                 return <option key={g.id} value={g.id} disabled={blocked}>{g.id}{seniorBlocked ? (lang === 'ar' ? ' (الندب غير متاح)' : ' (acting not allowed)') : exceeds ? (lang === 'ar' ? ' (يتجاوز الحد)' : ' (exceeds limit)') : ''}</option>;
               })}
@@ -480,15 +482,18 @@ function StepDetails({ form, update, employee, validation }) {
 
 function StepCompensation({ form, update, employee, targetGradeObj, validation }) {
   const { t, lang } = useI18n();
-  const isActing = form.type === 'acting';
+  const isActing = form.type === 'acting' || form.type === 'acting_admin';
+  const isActingPaid = form.type === 'acting';
   const isExternal = form.type === 'loan' || form.type === 'borrowing';
   const dur = validation.duration;
   const allowanceAmt = Number(form.allowanceAmount) || 0;
   const entitlements = GET_ENTITLEMENTS(employee, dur, lang);
-  const allowanceNote = form.type === 'acting'
+  const allowanceNote = isActingPaid
     ? (dur > 60
       ? (lang === 'ar' ? '25٪ من الحد الأدنى للدرجة — تتحمله الجهة الأم' : '25% of the grade minimum — paid by the home entity')
       : (lang === 'ar' ? 'المدة أقل من 60 يوماً — لا يُصرف بدل' : 'Under 60 days — no allowance applies'))
+    : form.type === 'acting_admin'
+    ? (lang === 'ar' ? 'الندب الإداري بلا أثر مالي' : 'Administrative acting — no financial impact')
     : (lang === 'ar' ? 'التكليف لا يشمل بدلاً منفصلاً' : 'Secondment does not include a separate allowance');
 
   return (
@@ -579,7 +584,7 @@ function StepCompensation({ form, update, employee, targetGradeObj, validation }
       {form.type !== 'borrowing' && (
         <Field label={t('other_benefits')} optional>
           <Textarea rows="3" value={form.otherBenefits} onChange={e => update({ otherBenefits: e.target.value })}
-            placeholder={lang === 'ar' ? 'تذكرة سفر سنوية، تأمين صحي ممتد، إلخ.' : 'Annual travel ticket, extended health insurance, etc.'} />
+            placeholder={lang === 'ar' ? 'تأمين صحي ممتد، تجهيزات إضافية، إلخ.' : 'Extended health insurance, additional equipment, etc.'} />
         </Field>
       )}
     </div>
@@ -718,7 +723,9 @@ function PolicyRail({ form, employee, targetGradeObj, validation }) {
         : validation.durationError
         ? t('err_duration_max')
         : dur > 0
-        ? (lang === 'ar' ? `${dur} يوم — ضمن الحد 365` : `${dur} days — within the 365-day limit`)
+        ? (form.type === 'secondment'
+          ? (lang === 'ar' ? `${dur} يوم — مدة محددة` : `${dur} days — specified duration`)
+          : (lang === 'ar' ? `${dur} يوم — ضمن الحد 365` : `${dur} days — within the 365-day limit`))
         : (lang === 'ar' ? 'لم يتم تحديد التواريخ' : 'Dates not set'),
     },
     {

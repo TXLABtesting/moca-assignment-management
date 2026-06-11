@@ -68,11 +68,13 @@ export const I18N = {
 
     // Types
     type_secondment: "Secondment",
-    type_acting: "Acting",
+    type_acting: "Acting (with allowance)",
+    type_acting_admin: "Acting (no allowance)",
     type_loan: "Loan",
     type_borrowing: "Borrowing",
     type_secondment_desc: "Temporary assignment to another federal entity, retaining home entity status.",
-    type_acting_desc: "Temporary appointment to a higher grade within the same entity.",
+    type_acting_desc: "Temporary appointment to a higher grade — 25% allowance applies after 60 days.",
+    type_acting_admin_desc: "Temporary appointment to a higher grade with no financial impact.",
     type_loan_desc: "Loan an employee to any external entity or company for a defined period.",
     type_borrowing_desc: "Receive an employee from any external entity or company to fill a critical role.",
 
@@ -279,11 +281,13 @@ export const I18N = {
     status_terminated: "ملغاة",
 
     type_secondment: "التكليف",
-    type_acting: "الندب",
+    type_acting: "الندب (مع البدل)",
+    type_acting_admin: "الندب الإداري (بدون بدل)",
     type_loan: "الإعارة",
     type_borrowing: "الاستعارة",
     type_secondment_desc: "تكليف مؤقت إلى جهة اتحادية أخرى مع الاحتفاظ بوضع الجهة الأم.",
-    type_acting_desc: "تعيين مؤقت في درجة أعلى داخل الجهة نفسها.",
+    type_acting_desc: "تعيين مؤقت في درجة أعلى — يُستحق بدل 25٪ بعد 60 يوماً.",
+    type_acting_admin_desc: "تعيين مؤقت في درجة أعلى دون أي أثر مالي.",
     type_loan_desc: "إعارة موظف إلى أي جهة أو شركة خارجية لفترة محددة.",
     type_borrowing_desc: "استعارة موظف من أي جهة أو شركة خارجية لشغل دور حيوي.",
 

@@ -216,8 +216,6 @@ export const GET_ENTITLEMENTS = (emp, durationDays, lang) => {
   const per = lang === 'ar' ? ' / سنة' : ' / yr';
   const perMo = lang === 'ar' ? ' / شهر' : ' / mo';
   return [
-    { key: 'education', label_en: 'Education allowance',          label_ar: 'بدل التعليم',                   value: fmt(basic >= 30000 ? 30000 : 20000) + per },
-    { key: 'ticket',    label_en: 'Air ticket allowance',         label_ar: 'بدل تذاكر السفر',               value: fmt(12000) + per },
     { key: 'phone',     label_en: 'Phone allowance',              label_ar: 'بدل الهاتف',                    value: senior ? fmt(700) + perMo : (lang === 'ar' ? 'لا يوجد' : 'None') },
     { key: 'insurance', label_en: 'Health insurance',             label_ar: 'التأمين الصحي',                 value: senior ? (lang === 'ar' ? 'الفئة الأولى — العائلة' : 'Category A — family') : (lang === 'ar' ? 'الفئة الثانية' : 'Category B') },
     { key: 'retirement',label_en: 'Retirement / pension',         label_ar: 'المعاش / التقاعد',              value: fmt(Math.round(basic * 0.20)) + (lang === 'ar' ? ' / شهر (حصة جهة العمل)' : ' / mo (employer share)') },
